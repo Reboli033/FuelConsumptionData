@@ -1,0 +1,154 @@
+---
+title: "FuelConsumption_Project"
+author: "S18809"
+date: "2023-10-03"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+```{r}
+library(skimr)
+```
+
+```{r}
+library(tinytex)
+```
+```{r}
+col_type <- "cccfdicfddddnff"
+Co2_rating <- read_csv("../Data/MY2021 Fuel Consumption Ratings.csv",col_types = col_type)
+head(Co2_rating)
+```
+```{r}
+view(Co2_rating)
+```
+
+```{r}
+Co2_rating <- Co2_rating %>%
+  remove_empty(c("cols","rows"))
+```
+
+```{r}
+view(Co2_rating)
+```
+
+
+```{r}
+skim(Co2_rating)
+```
+
+```{r}
+Co2_rating %>% 
+  filter(is.na(Transmission)) %>%
+  view()
+```
+
+```{r}
+# Here keep the data data description in the csv files
+data_des <- Co2_rating %>%
+  filter(is.na(Transmission))
+```
+
+```{r}
+Co2_rating <- Co2_rating %>%
+  drop_na()
+```
+
+```{r}
+glimpse(Co2_rating)
+```
+# Clean name the function 
+# Clean_names function comming from janitor package
+# case = "snake" , "lower_camel" , "Upper_camel"
+```{r}
+Co2_rating <- clean_names(dat = Co2_rating,case = "snake") 
+glimpse(Co2_rating)
+```
+# rename the function
+```{r}
+Co2_rating <- Co2_rating %>%
+  rename(model_year = model_1,
+         model_type = model_3,
+         n_cylinder = cylinders,
+         fuel_type = fuel,
+         fcons_city = fuel_consumption,
+         fcons_highway = x10,
+         fcons_combined = x11,
+         fcons_combining_mpg = x12,
+         co2_emision = co2_emissions,
+         Co2_rating = co2,
+         smog_rating = smog)
+
+glimpse(Co2_rating)
+```
+```{r}
+# see the summary of the data set
+skim(Co2_rating)  
+```
+
+```{r}
+view(Co2_rating)
+```
+
+# Here Transmission AM8 - This one have two values . one is type and speed or gears of the data . So split String
+
+```{r}
+Co2_rating <- Co2_rating %>%
+  mutate(n_gears = as.numeric(str_extract(transmission,"[0-9]+")),
+         transmission = str_extract(transmission,"[A-Z]+"))
+```
+
+# get the summary of the new variable
+```{r}
+Co2_rating %>%
+  select(n_gears,transmission) %>%
+  skim()
+```
+
+```{r}
+skim(Co2_rating)
+```
+
+```{r}
+# because change contentiously transmission
+Co2_rating %>%
+  filter(is.na(n_gears)) %>%
+  view()
+```
+
+# Handling the mising values because we can't clear the data set so assume the meaning ful name
+```{r}
+Co2_rating <- Co2_rating %>%
+  mutate(n_gears = ifelse(is.na(n_gears),-1,n_gears))
+```
+
+# Change the type and keep the unused model
+```{r}
+Co2_rating <- Co2_rating %>%
+  mutate(transmission_type = factor(transmission),.keep = "unused")
+
+```
+
+```{r}
+skim(Co2_rating)
+```
+# re allocate the column 
+```{r}
+Co2_rating <- Co2_rating %>%
+  relocate(transmission_type,fuel)
+```
+
+# remove the view() part when we knit the rmarkdown file.
+```{r}
+view(Co2_rating)
+```
+
